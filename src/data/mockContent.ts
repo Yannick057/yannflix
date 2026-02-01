@@ -260,7 +260,8 @@ export const filterContent = (
       }
     }
     if (filters.yearRange) {
-      if (item.year < filters.yearRange[0] || item.year > filters.yearRange[1]) {
+      const itemYear = typeof item.year === 'string' ? parseInt(item.year, 10) : item.year;
+      if (isNaN(itemYear) || itemYear < filters.yearRange[0] || itemYear > filters.yearRange[1]) {
         return false;
       }
     }
