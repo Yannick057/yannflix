@@ -3,29 +3,36 @@ export interface StreamingService {
   name: string;
   logo?: string;
   link?: string;
-  type: 'subscription' | 'rent' | 'buy';
+  type: "subscription" | "rent" | "buy";
   price?: number;
 }
 
 export interface Content {
   id: string;
+  tmdbId?: number; // ← ajouté pour faire le lien avec TMDB
   title: string;
   original_title?: string;
-  year: number;
-  type: 'movie' | 'series';
-  poster_url: string;
-  backdrop_url?: string;
+  year: number | string;
+  type: "movie" | "series";
+  poster_url?: string;   // ancien naming
+  backdrop_url?: string; // ancien naming
+  posterUrl?: string;    // nouveau naming utilisé dans les composants
+  backdropUrl?: string;  // nouveau naming utilisé dans les composants
   overview: string;
   genres: string[];
-  imdb_rating: number;
-  runtime?: number; // minutes for movies, episodes for series
+  imdb_rating?: number;
+  rating?: number;
+  runtime?: number; // minutes pour films, épisodes pour séries
   country: string;
-  streaming_services: StreamingService[];
+  streaming_services?: StreamingService[];
+  streamingServices?: StreamingService[];
   trailer_url?: string;
+  trailer?: string;
   cast?: string[];
   director?: string;
   seasons?: number;
-  leaving_date?: string; // When content is leaving a platform
+  leaving_date?: string; // Quand le contenu quitte une plateforme
+  leavingSoon?: boolean;
 }
 
 export interface UserList {
@@ -57,25 +64,45 @@ export interface FilterOptions {
   runtimeRange: [number, number];
   countries: string[];
   streamingServices: string[];
-  type: 'all' | 'movie' | 'series';
+  type: "all" | "movie" | "series";
 }
 
 export const STREAMING_PLATFORMS = [
-  { id: 'netflix', name: 'Netflix', color: 'bg-netflix' },
-  { id: 'prime', name: 'Prime Video', color: 'bg-prime' },
-  { id: 'disney', name: 'Disney+', color: 'bg-disney' },
-  { id: 'hulu', name: 'Hulu', color: 'bg-hulu' },
-  { id: 'apple', name: 'Apple TV+', color: 'bg-apple' },
-  { id: 'hbo', name: 'Max', color: 'bg-hbo' },
+  { id: "netflix", name: "Netflix", color: "bg-netflix" },
+  { id: "prime", name: "Prime Video", color: "bg-prime" },
+  { id: "disney", name: "Disney+", color: "bg-disney" },
+  { id: "hulu", name: "Hulu", color: "bg-hulu" },
+  { id: "apple", name: "Apple TV+", color: "bg-apple" },
+  { id: "hbo", name: "Max", color: "bg-hbo" },
 ] as const;
 
 export const GENRES = [
-  'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 
-  'Documentary', 'Drama', 'Family', 'Fantasy', 'Horror',
-  'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War'
+  "Action",
+  "Adventure",
+  "Animation",
+  "Comedy",
+  "Crime",
+  "Documentary",
+  "Drama",
+  "Family",
+  "Fantasy",
+  "Horror",
+  "Mystery",
+  "Romance",
+  "Sci-Fi",
+  "Thriller",
+  "War",
 ] as const;
 
 export const COUNTRIES = [
-  'France', 'USA', 'UK', 'Germany', 'Japan', 'South Korea', 
-  'Spain', 'Italy', 'Canada', 'Australia'
+  "France",
+  "USA",
+  "UK",
+  "Germany",
+  "Japan",
+  "South Korea",
+  "Spain",
+  "Italy",
+  "Canada",
+  "Australia",
 ] as const;
