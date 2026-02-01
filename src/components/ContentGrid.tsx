@@ -5,18 +5,21 @@ import { cn } from '@/lib/utils';
 interface ContentGridProps {
   content: Content[];
   onAddToList?: (content: Content) => void;
-  watchlist?: string[];
+  onAddToWatchlist?: (content: Content) => void;
+  watchlist?: (string | number)[];
   className?: string;
   emptyMessage?: string;
 }
 
 export function ContentGrid({ 
   content, 
-  onAddToList, 
+  onAddToList,
+  onAddToWatchlist, 
   watchlist = [],
   className,
   emptyMessage = "Aucun contenu trouvé"
 }: ContentGridProps) {
+  const handleAddToList = onAddToList || onAddToWatchlist;
   if (content.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -56,8 +59,8 @@ export function ContentGrid({
         >
           <ContentCard
             content={item}
-            onAddToList={onAddToList}
-            isInList={watchlist.includes(item.id)}
+            onAddToList={handleAddToList}
+            isInList={watchlist.includes(item.id) || (item.tmdbId !== undefined && watchlist.includes(item.tmdbId))}
           />
         </div>
       ))}

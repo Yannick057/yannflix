@@ -11,10 +11,20 @@ interface SearchBarProps {
   className?: string;
   onSearch?: (query: string) => void;
   placeholder?: string;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
-export function SearchBar({ className, onSearch, placeholder = "Rechercher un film ou une série..." }: SearchBarProps) {
-  const [query, setQuery] = useState('');
+export function SearchBar({ className, onSearch, placeholder = "Rechercher un film ou une série...", value, onChange }: SearchBarProps) {
+  const [internalQuery, setInternalQuery] = useState('');
+  const query = value !== undefined ? value : internalQuery;
+  const setQuery = (newValue: string) => {
+    if (onChange) {
+      onChange(newValue);
+    } else {
+      setInternalQuery(newValue);
+    }
+  };
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<Content[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);

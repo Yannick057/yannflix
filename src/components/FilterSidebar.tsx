@@ -13,7 +13,9 @@ import { GENRES, STREAMING_PLATFORMS, COUNTRIES } from '@/types/content';
 import { StreamingBadge } from './StreamingBadge';
 
 interface FilterSidebarProps {
-  onFiltersChange: (filters: FilterState) => void;
+  onFiltersChange?: (filters: FilterState) => void;
+  onChange?: (filters: FilterState) => void;
+  filters?: FilterState;
   className?: string;
 }
 
@@ -35,8 +37,9 @@ const defaultFilters: FilterState = {
   countries: [],
 };
 
-export function FilterSidebar({ onFiltersChange, className }: FilterSidebarProps) {
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
+export function FilterSidebar({ onFiltersChange, onChange, filters: externalFilters, className }: FilterSidebarProps) {
+  const [internalFilters, setInternalFilters] = useState<FilterState>(defaultFilters);
+  const filters = externalFilters ?? internalFilters;
   const [openSections, setOpenSections] = useState({
     type: true,
     streaming: true,
@@ -48,8 +51,11 @@ export function FilterSidebar({ onFiltersChange, className }: FilterSidebarProps
 
   const updateFilters = (newFilters: Partial<FilterState>) => {
     const updated = { ...filters, ...newFilters };
-    setFilters(updated);
-    onFiltersChange(updated);
+    if (!externalFilters) {
+      setInternalFilters(updated);
+    }
+    onFiltersChange?.(updated);
+    onChange?.(updated);
   };
 
   const toggleArrayFilter = (
@@ -64,8 +70,11 @@ export function FilterSidebar({ onFiltersChange, className }: FilterSidebarProps
   };
 
   const resetFilters = () => {
-    setFilters(defaultFilters);
-    onFiltersChange(defaultFilters);
+    if (!externalFilters) {
+      setInternalFilters(defaultFilters);
+    }
+    onFiltersChange?.(defaultFilters);
+    onChange?.(defaultFilters);
   };
 
   const hasActiveFilters = 
