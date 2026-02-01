@@ -27,7 +27,7 @@ export function ContentCard({
       {/* Poster */}
       <div className="relative aspect-[2/3] overflow-hidden">
         <img
-          src={content.poster_url}
+          src={content.poster_url || content.posterUrl || '/placeholder.svg'}
           alt={content.title}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
@@ -109,16 +109,16 @@ export function ContentCard({
 
         {/* Streaming badges */}
         <div className="flex flex-wrap gap-1">
-          {content.streaming_services.slice(0, 4).map((service) => (
+          {(content.streaming_services || content.streamingServices || []).slice(0, 4).map((service) => (
             <StreamingBadge 
               key={service.id} 
               platform={service.id} 
               size="sm" 
             />
           ))}
-          {content.streaming_services.length > 4 && (
+          {(content.streaming_services || content.streamingServices || []).length > 4 && (
             <span className="flex h-5 items-center px-1 text-xs text-muted-foreground">
-              +{content.streaming_services.length - 4}
+              +{(content.streaming_services || content.streamingServices || []).length - 4}
             </span>
           )}
         </div>
