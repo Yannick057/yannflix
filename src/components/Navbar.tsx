@@ -1,12 +1,22 @@
-import { Link, useLocation } from 'react-router-dom';
-import { Film, List, User, Menu, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Film, List, User, Menu, X, LogOut, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, loading, signOut } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Découvrir', icon: Film },
@@ -14,6 +24,11 @@ export function Navbar() {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
@@ -48,13 +63,47 @@ export function Navbar() {
 
           {/* User actions */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full text-muted-foreground hover:text-foreground"
-            >
-              <User size={20} />
-            </Button>
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full text-primary hover:text-primary"
+                  >
+                    <User size={20} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <div className="px-2 py-1.5">
+                    <p className="text-sm font-medium">{user.email}</p>
+                    <p className="text-xs text-muted-foreground">Connecté</p>
+                  </div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/lists" className="cursor-pointer">
+                      <List className="mr-2 h-4 w-4" />
+                      Mes listes
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Se déconnecter
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate('/auth')}
+              >
+                Connexion
+              </Button>
+            )}
 
             {/* Mobile menu button */}
             <Button
@@ -88,6 +137,18 @@ export function Navbar() {
                   {item.label}
                 </Link>
               ))}
+              {!user && (
+                <Button
+                  variant="default"
+                  className="mt-2 mx-4"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    navigate('/auth');
+                  }}
+                >
+                  Connexion
+                </Button>
+              )}
             </div>
           </div>
         )}

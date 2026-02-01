@@ -1,0 +1,220 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+
+export interface UserList {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ListItem {
+  id: string;
+  list_id: string;
+  content_id: string;
+  position: number;
+  added_at: string;
+  watched: boolean;
+  watched_at: string | null;
+  not_interested: boolean;
+}
+
+export function useUserLists() {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['userLists', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_lists')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data as UserList[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useListItems(listId: string) {
+  return useQuery({
+    queryKey: ['listItems', listId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('list_items')
+        .select(`
+          *,
+          content (*)
+        `)
+        .eq('list_id', listId)
+        .order('position', { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!listId,
+  });
+}
+
+export function useCreateList() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ name, description }: { name: string; description?: string }) => {
+      const { data, error } = await supabase
+        .from('user_lists')
+        .insert({
+          user_id: user!.id,
+          name,
+          description: description || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userLists'] });
+    },
+  });
+}
+
+export function useDeleteList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (listId: string) => {
+      const { error } = await supabase
+        .from('user_lists')
+        .delete()
+        .eq('id', listId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userLists'] });
+    },
+  });
+}
+
+export function useAddToList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ listId, contentId }: { listId: string; contentId: string }) => {
+      // Get current max position
+      const { data: items } = await supabase
+        .from('list_items')
+        .select('position')
+        .eq('list_id', listId)
+        .order('position', { ascending: false })
+        .limit(1);
+
+      const nextPosition = items && items.length > 0 ? items[0].position + 1 : 0;
+
+      const { data, error } = await supabase
+        .from('list_items')
+        .insert({
+          list_id: listId,
+          content_id: contentId,
+          position: nextPosition,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['listItems', variables.listId] });
+    },
+  });
+}
+
+export function useRemoveFromList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ listId, itemId }: { listId: string; itemId: string }) => {
+      const { error } = await supabase
+        .from('list_items')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['listItems', variables.listId] });
+    },
+  });
+}
+
+export function useUpdateListItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      itemId, 
+      updates 
+    }: { 
+      itemId: string; 
+      updates: Partial<Pick<ListItem, 'watched' | 'not_interested' | 'position'>> 
+    }) => {
+      const updateData: Record<string, unknown> = { ...updates };
+      if (updates.watched) {
+        updateData.watched_at = new Date().toISOString();
+      }
+
+      const { data, error } = await supabase
+        .from('list_items')
+        .update(updateData)
+        .eq('id', itemId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['listItems'] });
+    },
+  });
+}
+
+export function useCreateDefaultLists() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const defaultLists = [
+        { name: 'À regarder', description: 'Ma liste de films et séries à voir', is_default: true },
+        { name: 'Déjà vu', description: 'Ce que j\'ai déjà regardé', is_default: true },
+      ];
+
+      const { data, error } = await supabase
+        .from('user_lists')
+        .insert(
+          defaultLists.map((list) => ({
+            ...list,
+            user_id: user!.id,
+          }))
+        )
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userLists'] });
+    },
+  });
+}
