@@ -68,13 +68,31 @@ export interface FilterOptions {
 }
 
 export const STREAMING_PLATFORMS = [
-  { id: "netflix", name: "Netflix", color: "bg-netflix" },
-  { id: "prime", name: "Prime Video", color: "bg-prime" },
-  { id: "disney", name: "Disney+", color: "bg-disney" },
-  { id: "hulu", name: "Hulu", color: "bg-hulu" },
-  { id: "apple", name: "Apple TV+", color: "bg-apple" },
-  { id: "hbo", name: "Max", color: "bg-hbo" },
+  { id: "netflix", providerId: 8, name: "Netflix", color: "bg-red-600" },
+  { id: "prime", providerId: 119, name: "Prime Video", color: "bg-blue-500" },
+  { id: "disney", providerId: 337, name: "Disney+", color: "bg-blue-700" },
+  { id: "canal", providerId: 381, name: "Canal+", color: "bg-black" },
+  { id: "apple", providerId: 350, name: "Apple TV+", color: "bg-gray-800" },
+  { id: "ocs", providerId: 56, name: "OCS", color: "bg-orange-500" },
+  { id: "paramount", providerId: 531, name: "Paramount+", color: "bg-blue-600" },
+  { id: "crunchyroll", providerId: 283, name: "Crunchyroll", color: "bg-orange-600" },
+  { id: "adn", providerId: 415, name: "ADN", color: "bg-blue-400" },
+  { id: "max", providerId: 1899, name: "Max", color: "bg-purple-600" },
 ] as const;
+
+// Mapping from TMDB provider IDs to our platform IDs
+export const PROVIDER_ID_MAP: Record<number, string> = {
+  8: "netflix",
+  119: "prime",
+  337: "disney",
+  381: "canal",
+  350: "apple",
+  56: "ocs",
+  531: "paramount",
+  283: "crunchyroll",
+  415: "adn",
+  1899: "max",
+};
 
 export const GENRES = [
   "Action",
