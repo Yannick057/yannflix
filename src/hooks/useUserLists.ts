@@ -23,6 +23,27 @@ export interface ListItem {
   not_interested: boolean;
 }
 
+export interface ListItemWithContent extends ListItem {
+  content: {
+    id: string;
+    title: string;
+    type: string;
+    year: number;
+    poster_url: string | null;
+    backdrop_url: string | null;
+    imdb_rating: number | null;
+    genres: string[] | null;
+    overview: string | null;
+    runtime: number | null;
+    seasons: number | null;
+    country: string | null;
+    director: string | null;
+    cast_members: string[] | null;
+    trailer_url: string | null;
+    tmdb_id: string | null;
+  } | null;
+}
+
 export function useUserLists() {
   const { user } = useAuth();
 
@@ -56,7 +77,7 @@ export function useListItems(listId: string) {
         .order('position', { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data as ListItemWithContent[];
     },
     enabled: !!listId,
   });
@@ -87,11 +108,42 @@ export function useCreateList() {
   });
 }
 
+export function useUpdateList() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ listId, name, description }: { listId: string; name: string; description?: string }) => {
+      const { data, error } = await supabase
+        .from('user_lists')
+        .update({
+          name,
+          description: description || null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', listId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userLists'] });
+    },
+  });
+}
+
 export function useDeleteList() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (listId: string) => {
+      // First delete all items in the list
+      await supabase
+        .from('list_items')
+        .delete()
+        .eq('list_id', listId);
+
       const { error } = await supabase
         .from('user_lists')
         .delete()
@@ -101,6 +153,7 @@ export function useDeleteList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLists'] });
+      queryClient.invalidateQueries({ queryKey: ['listItems'] });
     },
   });
 }
@@ -110,6 +163,18 @@ export function useAddToList() {
 
   return useMutation({
     mutationFn: async ({ listId, contentId }: { listId: string; contentId: string }) => {
+      // Check if already exists
+      const { data: existing } = await supabase
+        .from('list_items')
+        .select('id')
+        .eq('list_id', listId)
+        .eq('content_id', contentId)
+        .single();
+
+      if (existing) {
+        throw new Error('Ce contenu est déjà dans cette liste');
+      }
+
       // Get current max position
       const { data: items } = await supabase
         .from('list_items')
