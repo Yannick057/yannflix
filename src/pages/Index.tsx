@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 
 import { Navbar } from "@/components/Navbar";
 import { SearchBar } from "@/components/SearchBar";
@@ -7,14 +7,14 @@ import { ContentGrid } from "@/components/ContentGrid";
 
 import { Content } from "@/types/content";
 
-import { Filter } from "lucide-react";
+import { Filter, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 import {
-  useSearchContent,
-  useDiscoverContent,
-  useTrending,
+  useInfiniteSearchContent,
+  useInfiniteDiscoverContent,
+  useInfiniteTrending,
 } from "@/hooks/useContent";
 import {
   getImageUrl,
@@ -35,10 +35,12 @@ const Index = () => {
   });
   const [watchlist, setWatchlist] = useState<number[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Construction des filtres TMDB à partir de l'UI
   const tmdbFilters = useMemo(() => {
-    const f: Record<string, any> = { page: 1 };
+    const f: Record<string, unknown> = {};
 
     if (filters.genres.length > 0) {
       const genreIds = filters.genres
@@ -63,18 +65,38 @@ const Index = () => {
     return f;
   }, [filters]);
 
-  // Requêtes TMDB via React Query
-  const { data: searchResults, isLoading: searchLoading } =
-    useSearchContent(searchQuery, 1);
+  // Requêtes TMDB via React Query avec infinite scroll
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    fetchNextPage: fetchNextSearch,
+    hasNextPage: hasNextSearch,
+    isFetchingNextPage: isFetchingNextSearch,
+  } = useInfiniteSearchContent(searchQuery);
 
-  const { data: discoverMoviesData, isLoading: moviesLoading } =
-    useDiscoverContent("movie", tmdbFilters);
+  const {
+    data: discoverMoviesData,
+    isLoading: moviesLoading,
+    fetchNextPage: fetchNextMovies,
+    hasNextPage: hasNextMovies,
+    isFetchingNextPage: isFetchingNextMovies,
+  } = useInfiniteDiscoverContent("movie", tmdbFilters);
 
-  const { data: discoverTVData, isLoading: tvLoading } =
-    useDiscoverContent("tv", tmdbFilters);
+  const {
+    data: discoverTVData,
+    isLoading: tvLoading,
+    fetchNextPage: fetchNextTV,
+    hasNextPage: hasNextTV,
+    isFetchingNextPage: isFetchingNextTV,
+  } = useInfiniteDiscoverContent("tv", tmdbFilters);
 
-  const { data: trendingData, isLoading: trendingLoading } =
-    useTrending("all");
+  const {
+    data: trendingData,
+    isLoading: trendingLoading,
+    fetchNextPage: fetchNextTrending,
+    hasNextPage: hasNextTrending,
+    isFetchingNextPage: isFetchingNextTrending,
+  } = useInfiniteTrending("all");
 
   // Conversion TMDB -> type Content utilisé par ton UI
   const convertToContent = (item: TMDBContent): Content => {
@@ -113,31 +135,46 @@ const Index = () => {
   };
 
   // Préparation + filtrage du contenu
-  const filteredContent = useMemo(() => {
+  const { filteredContent, hasNextPage, fetchNextPage, isFetchingNextPage } = useMemo(() => {
     let results: Content[] = [];
+    let hasNext = false;
+    let fetchNext: () => void = () => {};
+    let isFetching = false;
 
-    if (searchQuery && searchResults?.results) {
+    if (searchQuery && searchData?.pages) {
       // Mode recherche
-      results = searchResults.results
+      results = searchData.pages
+        .flatMap((page) => page.results)
         .filter(
           (item: TMDBContent) =>
             item.media_type === "movie" || item.media_type === "tv"
         )
         .map(convertToContent);
-    } else {
-      // Mode découverte
-      if (filters.type === "all" && trendingData?.results) {
-        results = trendingData.results.map(convertToContent);
-      } else if (filters.type === "movie" && discoverMoviesData?.results) {
-        results = discoverMoviesData.results.map(convertToContent);
-      } else if (filters.type === "series" && discoverTVData?.results) {
-        results = discoverTVData.results.map(convertToContent);
-      } else if (filters.type === "all") {
-        const movies =
-          discoverMoviesData?.results?.map(convertToContent) || [];
-        const tv = discoverTVData?.results?.map(convertToContent) || [];
-        results = [...movies, ...tv].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      }
+      hasNext = !!hasNextSearch;
+      fetchNext = () => fetchNextSearch();
+      isFetching = isFetchingNextSearch;
+    } else if (filters.type === "all" && trendingData?.pages) {
+      // Mode tendances
+      results = trendingData.pages
+        .flatMap((page) => page.results)
+        .map(convertToContent);
+      hasNext = !!hasNextTrending;
+      fetchNext = () => fetchNextTrending();
+      isFetching = isFetchingNextTrending;
+    } else if (filters.type === "movie" && discoverMoviesData?.pages) {
+      results = discoverMoviesData.pages
+        .flatMap((page) => page.results)
+        .map(convertToContent);
+      hasNext = !!hasNextMovies;
+      fetchNext = () => fetchNextMovies();
+      isFetching = isFetchingNextMovies;
+    } else if (filters.type === "series" && discoverTVData?.pages) {
+      results = discoverTVData.pages
+        .flatMap((page) => page.results)
+        .map(convertToContent);
+      hasNext = !!hasNextTV;
+      fetchNext = () => fetchNextTV();
+      isFetching = isFetchingNextTV;
     }
 
     if (filters.countries.length > 0) {
@@ -146,23 +183,68 @@ const Index = () => {
       );
     }
 
-    return results;
+    // Remove duplicates by id
+    const seen = new Set<string>();
+    results = results.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+
+    return { 
+      filteredContent: results, 
+      hasNextPage: hasNext, 
+      fetchNextPage: fetchNext,
+      isFetchingNextPage: isFetching 
+    };
   }, [
     searchQuery,
-    searchResults,
+    searchData,
     discoverMoviesData,
     discoverTVData,
     trendingData,
     filters,
+    hasNextSearch,
+    hasNextMovies,
+    hasNextTV,
+    hasNextTrending,
+    isFetchingNextSearch,
+    isFetchingNextMovies,
+    isFetchingNextTV,
+    isFetchingNextTrending,
   ]);
+
+  // Infinite scroll observer
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage]
+  );
+
+  useEffect(() => {
+    const element = loadMoreRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.1,
+      rootMargin: "100px",
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const handleAddToWatchlist = (content: Content) => {
     if (!content.tmdbId) return;
 
     setWatchlist((prev) =>
-      prev.includes(content.tmdbId)
+      prev.includes(content.tmdbId!)
         ? prev.filter((id) => id !== content.tmdbId)
-        : [...prev, content.tmdbId]
+        : [...prev, content.tmdbId!]
     );
   };
 
@@ -270,11 +352,35 @@ const Index = () => {
                 </p>
               </div>
             ) : (
-              <ContentGrid
-                content={filteredContent}
-                watchlist={watchlist}
-                onAddToWatchlist={handleAddToWatchlist}
-              />
+              <>
+                <ContentGrid
+                  content={filteredContent}
+                  watchlist={watchlist}
+                  onAddToWatchlist={handleAddToWatchlist}
+                />
+                
+                {/* Load more trigger */}
+                <div 
+                  ref={loadMoreRef} 
+                  className="flex justify-center items-center py-8"
+                >
+                  {isFetchingNextPage && (
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                      <span>Chargement...</span>
+                    </div>
+                  )}
+                  {hasNextPage && !isFetchingNextPage && (
+                    <Button
+                      variant="outline"
+                      onClick={() => fetchNextPage()}
+                      className="text-gray-300"
+                    >
+                      Charger plus
+                    </Button>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

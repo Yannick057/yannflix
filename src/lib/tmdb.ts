@@ -87,88 +87,48 @@ export const searchContent = async (
   return res.json();
 };
 
-// Découverte films - fetch multiple pages for more results
+// Découverte films - single page for infinite scroll
 export const discoverMovies = async (filters: {
   page?: number;
   with_genres?: string;
   "vote_average.gte"?: number;
   "primary_release_date.gte"?: string;
   "primary_release_date.lte"?: string;
-  totalPages?: number;
 }): Promise<TMDBResponse> => {
-  const { totalPages = 3, ...restFilters } = filters;
-  
-  const allResults: TMDBContent[] = [];
-  let totalResults = 0;
-  let totalPagesFromApi = 0;
-  
-  for (let page = 1; page <= totalPages; page++) {
-    const url = buildUrl("/discover/movie", {
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      include_video: "false",
-      ...restFilters,
-      page,
-    });
+  const url = buildUrl("/discover/movie", {
+    sort_by: "popularity.desc",
+    include_adult: "false",
+    include_video: "false",
+    ...filters,
+  });
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error("Erreur lors de la découverte de films");
-    }
-    const data: TMDBResponse = await res.json();
-    allResults.push(...data.results);
-    totalResults = data.total_results;
-    totalPagesFromApi = data.total_pages;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Erreur lors de la découverte de films");
   }
-  
-  return {
-    page: 1,
-    results: allResults,
-    total_pages: totalPagesFromApi,
-    total_results: totalResults,
-  };
+  return res.json();
 };
 
-// Découverte séries - fetch multiple pages for more results
+// Découverte séries - single page for infinite scroll
 export const discoverTVShows = async (filters: {
   page?: number;
   with_genres?: string;
   "vote_average.gte"?: number;
   "first_air_date.gte"?: string;
   "first_air_date.lte"?: string;
-  totalPages?: number;
 }): Promise<TMDBResponse> => {
-  const { totalPages = 3, ...restFilters } = filters;
-  
-  const allResults: TMDBContent[] = [];
-  let totalResults = 0;
-  let totalPagesFromApi = 0;
-  
-  for (let page = 1; page <= totalPages; page++) {
-    const url = buildUrl("/discover/tv", {
-      sort_by: "popularity.desc",
-      include_adult: "false",
-      include_null_first_air_dates: "false",
-      ...restFilters,
-      page,
-    });
+  const url = buildUrl("/discover/tv", {
+    sort_by: "popularity.desc",
+    include_adult: "false",
+    include_null_first_air_dates: "false",
+    ...filters,
+  });
 
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error("Erreur lors de la découverte de séries");
-    }
-    const data: TMDBResponse = await res.json();
-    allResults.push(...data.results);
-    totalResults = data.total_results;
-    totalPagesFromApi = data.total_pages;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error("Erreur lors de la découverte de séries");
   }
-  
-  return {
-    page: 1,
-    results: allResults,
-    total_pages: totalPagesFromApi,
-    total_results: totalResults,
-  };
+  return res.json();
 };
 
 // Détails d'un contenu
