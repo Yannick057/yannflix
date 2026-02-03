@@ -91,6 +91,8 @@ export const searchContent = async (
 export const discoverMovies = async (filters: {
   page?: number;
   with_genres?: string;
+  with_watch_providers?: string;
+  watch_region?: string;
   "vote_average.gte"?: number;
   "primary_release_date.gte"?: string;
   "primary_release_date.lte"?: string;
@@ -99,6 +101,7 @@ export const discoverMovies = async (filters: {
     sort_by: "popularity.desc",
     include_adult: "false",
     include_video: "false",
+    watch_region: "FR",
     ...filters,
   });
 
@@ -113,6 +116,8 @@ export const discoverMovies = async (filters: {
 export const discoverTVShows = async (filters: {
   page?: number;
   with_genres?: string;
+  with_watch_providers?: string;
+  watch_region?: string;
   "vote_average.gte"?: number;
   "first_air_date.gte"?: string;
   "first_air_date.lte"?: string;
@@ -121,6 +126,7 @@ export const discoverTVShows = async (filters: {
     sort_by: "popularity.desc",
     include_adult: "false",
     include_null_first_air_dates: "false",
+    watch_region: "FR",
     ...filters,
   });
 

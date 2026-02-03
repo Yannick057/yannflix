@@ -22,6 +22,7 @@ import {
   GENRE_IDS,
   TMDBContent,
 } from "@/lib/tmdb";
+import { PLATFORM_PROVIDER_IDS } from "@/hooks/useStreamingProviders";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -60,6 +61,17 @@ const Index = () => {
       f["primary_release_date.lte"] = `${filters.yearRange[1]}-12-31`;
       f["first_air_date.gte"] = `${filters.yearRange[0]}-01-01`;
       f["first_air_date.lte"] = `${filters.yearRange[1]}-12-31`;
+    }
+
+    // Filtre par plateformes de streaming
+    if (filters.streamingServices.length > 0) {
+      const providerIds = filters.streamingServices
+        .map((platform) => PLATFORM_PROVIDER_IDS[platform])
+        .filter(Boolean);
+      if (providerIds.length > 0) {
+        f.with_watch_providers = providerIds.join("|");
+        f.watch_region = "FR";
+      }
     }
 
     return f;

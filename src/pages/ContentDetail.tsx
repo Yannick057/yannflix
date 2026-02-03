@@ -4,12 +4,15 @@ import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { StreamingBadge } from '@/components/StreamingBadge';
 import { RatingBadge } from '@/components/RatingBadge';
+import { WatchLinksButton } from '@/components/WatchLinksButton';
+import { LeavingSoonBadge } from '@/components/LeavingSoonBadge';
+import { NewSeasonBadge } from '@/components/NewSeasonBadge';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useContentDetail } from '@/hooks/useContent';
-import { getImageUrl, GENRES } from '@/lib/tmdb';
+import { getImageUrl } from '@/lib/tmdb';
 
 interface WatchProvider {
   provider_id: number;
@@ -98,6 +101,11 @@ const ContentDetail = () => {
     v => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
   );
 
+  // Demo: leaving soon data (would come from API in production)
+  const leavingSoon = false; // Set to true to test
+  const leavingDate = "2024-02-15";
+  const leavingPlatform = "Netflix";
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -142,10 +150,26 @@ const ContentDetail = () => {
                   <Badge variant="outline" className="uppercase text-xs">
                     {type === 'movie' ? 'Film' : 'Série'}
                   </Badge>
+                  
+                  {/* New season badge for series */}
+                  {type === 'tv' && seasons && seasons > 1 && (
+                    <NewSeasonBadge type="season" number={seasons} variant="small" />
+                  )}
                 </div>
                 <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-4">
                   {title}
                 </h1>
+
+                {/* Leaving soon alert */}
+                {leavingSoon && (
+                  <div className="mb-4">
+                    <LeavingSoonBadge 
+                      date={leavingDate} 
+                      platformName={leavingPlatform}
+                      variant="large" 
+                    />
+                  </div>
+                )}
 
                 {/* Meta info */}
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -184,10 +208,20 @@ const ContentDetail = () => {
 
               {/* Action buttons */}
               <div className="flex flex-wrap gap-3">
+                {/* Watch button with provider links */}
+                <WatchLinksButton 
+                  providers={watchProviders ? {
+                    flatrate: flatrateProviders,
+                    rent: rentProviders,
+                    buy: buyProviders,
+                    link: providerLink,
+                  } : null}
+                />
+
                 {trailer && (
                   <Button
                     size="lg"
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow"
+                    variant="outline"
                     asChild
                   >
                     <a href={`https://www.youtube.com/watch?v=${trailer.key}`} target="_blank" rel="noopener noreferrer">
@@ -275,12 +309,15 @@ const ContentDetail = () => {
                     {/* Subscription */}
                     {flatrateProviders.length > 0 && (
                       <div>
-                        <p className="text-sm text-muted-foreground mb-2">Abonnement</p>
+                        <p className="text-sm text-muted-foreground mb-2">Inclus dans l'abonnement</p>
                         <div className="flex flex-wrap gap-3">
                           {flatrateProviders.map((provider: WatchProvider) => (
-                            <div
+                            <a
                               key={provider.provider_id}
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors"
+                              href={providerLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
                             >
                               <StreamingBadge 
                                 platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
@@ -289,7 +326,8 @@ const ContentDetail = () => {
                                 size="lg" 
                               />
                               <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                            </div>
+                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                            </a>
                           ))}
                         </div>
                       </div>
@@ -301,9 +339,12 @@ const ContentDetail = () => {
                         <p className="text-sm text-muted-foreground mb-2">Location</p>
                         <div className="flex flex-wrap gap-3">
                           {rentProviders.map((provider: WatchProvider) => (
-                            <div
+                            <a
                               key={provider.provider_id}
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors"
+                              href={providerLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
                             >
                               <StreamingBadge 
                                 platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
@@ -312,7 +353,8 @@ const ContentDetail = () => {
                                 size="lg" 
                               />
                               <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                            </div>
+                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                            </a>
                           ))}
                         </div>
                       </div>
@@ -324,9 +366,12 @@ const ContentDetail = () => {
                         <p className="text-sm text-muted-foreground mb-2">Achat</p>
                         <div className="flex flex-wrap gap-3">
                           {buyProviders.map((provider: WatchProvider) => (
-                            <div
+                            <a
                               key={provider.provider_id}
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors"
+                              href={providerLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
                             >
                               <StreamingBadge 
                                 platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
@@ -335,7 +380,8 @@ const ContentDetail = () => {
                                 size="lg" 
                               />
                               <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                            </div>
+                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+                            </a>
                           ))}
                         </div>
                       </div>
