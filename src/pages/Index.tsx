@@ -135,13 +135,15 @@ const Index = () => {
   };
 
   // Préparation + filtrage du contenu
-  const { filteredContent, hasNextPage, fetchNextPage, isFetchingNextPage } = useMemo(() => {
+  const { filteredContent, hasNextPage, fetchNextPage, isFetchingNextPage, totalResults } = useMemo(() => {
     let results: Content[] = [];
     let hasNext = false;
     let fetchNext: () => void = () => {};
     let isFetching = false;
+    let total = 0;
 
     if (searchQuery && searchData?.pages) {
+      total = searchData.pages[0]?.total_results || 0;
       // Mode recherche
       results = searchData.pages
         .flatMap((page) => page.results)
@@ -154,7 +156,7 @@ const Index = () => {
       fetchNext = () => fetchNextSearch();
       isFetching = isFetchingNextSearch;
     } else if (filters.type === "all" && trendingData?.pages) {
-      // Mode tendances
+      total = trendingData.pages[0]?.total_results || 0;
       results = trendingData.pages
         .flatMap((page) => page.results)
         .map(convertToContent);
@@ -162,6 +164,7 @@ const Index = () => {
       fetchNext = () => fetchNextTrending();
       isFetching = isFetchingNextTrending;
     } else if (filters.type === "movie" && discoverMoviesData?.pages) {
+      total = discoverMoviesData.pages[0]?.total_results || 0;
       results = discoverMoviesData.pages
         .flatMap((page) => page.results)
         .map(convertToContent);
@@ -169,6 +172,7 @@ const Index = () => {
       fetchNext = () => fetchNextMovies();
       isFetching = isFetchingNextMovies;
     } else if (filters.type === "series" && discoverTVData?.pages) {
+      total = discoverTVData.pages[0]?.total_results || 0;
       results = discoverTVData.pages
         .flatMap((page) => page.results)
         .map(convertToContent);
@@ -195,7 +199,8 @@ const Index = () => {
       filteredContent: results, 
       hasNextPage: hasNext, 
       fetchNextPage: fetchNext,
-      isFetchingNextPage: isFetching 
+      isFetchingNextPage: isFetching,
+      totalResults: total
     };
   }, [
     searchQuery,
@@ -298,8 +303,11 @@ const Index = () => {
               <div className="text-gray-300">
                 <span className="font-semibold text-white">
                   {filteredContent.length}
-                </span>{" "}
-                résultat{filteredContent.length !== 1 ? "s" : ""}
+                </span>
+                {totalResults > 0 && (
+                  <span className="text-gray-400"> sur {totalResults.toLocaleString('fr-FR')}</span>
+                )}{" "}
+                résultat{(totalResults || filteredContent.length) !== 1 ? "s" : ""}
                 {searchQuery && (
                   <span className="ml-1">
                     pour{" "}
