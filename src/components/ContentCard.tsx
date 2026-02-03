@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Play, Plus, Clock, Check } from 'lucide-react';
+import { Play, Plus, Check } from 'lucide-react';
 import { Content } from '@/types/content';
-import { StreamingBadge } from './StreamingBadge';
 import { RatingBadge } from './RatingBadge';
+import { ProvidersBadges } from './ProvidersBadges';
+import { LeavingSoonBadge } from './LeavingSoonBadge';
+import { NewSeasonBadge } from './NewSeasonBadge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useContentProviders } from '@/hooks/useStreamingProviders';
 
 interface ContentCardProps {
   content: Content;
@@ -19,6 +22,9 @@ export function ContentCard({
   isInList = false,
   showActions = true 
 }: ContentCardProps) {
+  // Fetch providers for this content
+  const { data: providers, isLoading: providersLoading } = useContentProviders(content.id);
+
   return (
     <Link
       to={`/content/${content.id}`}
@@ -36,17 +42,30 @@ export function ContentCard({
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         
-        {/* Leaving soon badge */}
-        {content.leaving_date && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 rounded bg-destructive px-2 py-1 text-xs font-medium text-destructive-foreground">
-            <Clock size={12} />
-            <span>Bientôt indisponible</span>
+        {/* Top badges container */}
+        <div className="absolute top-2 left-2 right-2 flex items-start justify-between gap-2">
+          {/* Left side - status badges */}
+          <div className="flex flex-col gap-1">
+            {/* Leaving soon badge */}
+            {content.leaving_date && (
+              <LeavingSoonBadge date={content.leaving_date} variant="small" />
+            )}
+            
+            {/* New season badge for series */}
+            {content.type === 'series' && content.newSeason && (
+              <NewSeasonBadge 
+                type="season" 
+                number={content.newSeasonNumber}
+                date={content.newSeasonDate}
+                variant="small" 
+              />
+            )}
           </div>
-        )}
 
-        {/* Type badge */}
-        <div className="absolute top-2 right-2 rounded bg-background/80 px-2 py-0.5 text-xs font-medium uppercase backdrop-blur-sm">
-          {content.type === 'movie' ? 'Film' : 'Série'}
+          {/* Right side - type badge */}
+          <div className="rounded bg-background/80 px-2 py-0.5 text-xs font-medium uppercase backdrop-blur-sm shrink-0">
+            {content.type === 'movie' ? 'Film' : 'Série'}
+          </div>
         </div>
 
         {/* Hover actions */}
@@ -107,21 +126,13 @@ export function ContentCard({
           )}
         </div>
 
-        {/* Streaming badges */}
-        <div className="flex flex-wrap gap-1">
-          {(content.streaming_services || content.streamingServices || []).slice(0, 4).map((service) => (
-            <StreamingBadge 
-              key={service.id} 
-              platform={service.id} 
-              size="sm" 
-            />
-          ))}
-          {(content.streaming_services || content.streamingServices || []).length > 4 && (
-            <span className="flex h-5 items-center px-1 text-xs text-muted-foreground">
-              +{(content.streaming_services || content.streamingServices || []).length - 4}
-            </span>
-          )}
-        </div>
+        {/* Streaming providers from API */}
+        <ProvidersBadges 
+          providers={providers?.flatrate} 
+          isLoading={providersLoading}
+          maxDisplay={4}
+          size="sm"
+        />
       </div>
     </Link>
   );

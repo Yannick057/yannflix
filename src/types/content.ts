@@ -33,6 +33,11 @@ export interface Content {
   seasons?: number;
   leaving_date?: string; // Quand le contenu quitte une plateforme
   leavingSoon?: boolean;
+  newSeason?: boolean; // Nouvelle saison disponible
+  newSeasonNumber?: number;
+  newSeasonDate?: string;
+  newEpisode?: boolean; // Nouvel épisode disponible
+  newEpisodeDate?: string;
 }
 
 export interface UserList {
