@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, List, User, Menu, X, LogOut, Loader2 } from 'lucide-react';
+import { Film, List, User, Menu, X, LogOut, Loader2, Clock } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -20,6 +20,7 @@ export function Navbar() {
 
   const navItems = [
     { path: '/', label: 'Découvrir', icon: Film },
+    { path: '/leaving-soon', label: 'Quitte bientôt', icon: Clock },
     { path: '/lists', label: 'Mes Listes', icon: List },
   ];
 

@@ -7,11 +7,13 @@ import { RatingBadge } from '@/components/RatingBadge';
 import { WatchLinksButton } from '@/components/WatchLinksButton';
 import { LeavingSoonBadge } from '@/components/LeavingSoonBadge';
 import { NewSeasonBadge } from '@/components/NewSeasonBadge';
+import { SeasonsList } from '@/components/SeasonsList';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useContentDetail } from '@/hooks/useContent';
+import { useTVDetails } from '@/hooks/useTVSeasons';
 import { getImageUrl } from '@/lib/tmdb';
 
 interface WatchProvider {
@@ -39,6 +41,11 @@ const ContentDetail = () => {
   const { data: content, isLoading, error } = useContentDetail(
     parsedId?.tmdbId || 0,
     parsedId?.type || 'movie'
+  );
+
+  // Fetch TV details for series (includes next episode info)
+  const { data: tvDetails } = useTVDetails(
+    parsedId?.type === 'tv' ? parsedId.tmdbId : 0
   );
 
   if (isLoading) {
@@ -389,6 +396,11 @@ const ContentDetail = () => {
                   </div>
                 )}
               </div>
+
+              {/* Seasons & Episodes for TV series */}
+              {type === 'tv' && parsedId?.tmdbId && (
+                <SeasonsList tvId={parsedId.tmdbId} />
+              )}
             </div>
           </div>
         </div>

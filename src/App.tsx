@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import ContentDetail from "./pages/ContentDetail";
 import MyLists from "./pages/MyLists";
 import Auth from "./pages/Auth";
+import LeavingSoon from "./pages/LeavingSoon";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/content/:id" element={<ContentDetail />} />
             <Route path="/lists" element={<MyLists />} />
+            <Route path="/leaving-soon" element={<LeavingSoon />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
