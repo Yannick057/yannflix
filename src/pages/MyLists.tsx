@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, MoreHorizontal, Trash2, Edit2, GripVertical, Film, Tv, Clock, Check, X, List, LogIn } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
+import { NotificationSettings } from '@/components/NotificationSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -272,6 +273,9 @@ const MyLists = () => {
                 <p className="text-muted-foreground text-sm">Aucune liste</p>
               )}
             </div>
+            
+            {/* Notification settings */}
+            <NotificationSettings className="mt-6" />
           </aside>
 
           {/* List content */}

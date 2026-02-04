@@ -8,6 +8,7 @@ import { WatchLinksButton } from '@/components/WatchLinksButton';
 import { LeavingSoonBadge } from '@/components/LeavingSoonBadge';
 import { NewSeasonBadge } from '@/components/NewSeasonBadge';
 import { SeasonsList } from '@/components/SeasonsList';
+import { FollowSeriesButton } from '@/components/FollowSeriesButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -263,6 +264,14 @@ const ContentDetail = () => {
                   <Ban size={20} className="mr-2" />
                   Pas intéressé
                 </Button>
+                
+                {/* Follow for notifications - TV series only */}
+                {type === 'tv' && parsedId?.tmdbId && (
+                  <FollowSeriesButton 
+                    tmdbId={parsedId.tmdbId} 
+                    seriesName={title} 
+                  />
+                )}
               </div>
 
               {/* Synopsis */}
