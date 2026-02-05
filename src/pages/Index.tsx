@@ -4,6 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { SearchBar } from "@/components/SearchBar";
 import { FilterSidebar, FilterState } from "@/components/FilterSidebar";
 import { ContentGrid } from "@/components/ContentGrid";
+import { RecommendationsSection } from "@/components/RecommendationsSection";
 
 import { Content } from "@/types/content";
 
@@ -300,6 +301,13 @@ const Index = () => {
 
       {/* Main content */}
       <div className="container mx-auto px-4 py-8">
+        {/* Recommendations section - only show on initial view */}
+        {!searchQuery && filters.type === "all" && filters.genres.length === 0 && (
+          <div className="mb-10">
+            <RecommendationsSection />
+          </div>
+        )}
+
         <div className="flex gap-8">
           {/* Desktop sidebar */}
           <aside className="hidden lg:block w-80 flex-shrink-0">
