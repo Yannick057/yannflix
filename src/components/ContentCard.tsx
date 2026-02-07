@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Play, Plus, Check } from 'lucide-react';
+import { Play, Plus, Check, Eye } from 'lucide-react';
 import { Content } from '@/types/content';
 import { RatingBadge } from './RatingBadge';
 import { ProvidersBadges } from './ProvidersBadges';
@@ -8,6 +8,7 @@ import { NewSeasonBadge } from './NewSeasonBadge';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useContentProviders } from '@/hooks/useStreamingProviders';
+import { useContentProgress } from '@/hooks/useContentProgress';
 
 interface ContentCardProps {
   content: Content;
@@ -24,6 +25,13 @@ export function ContentCard({
 }: ContentCardProps) {
   // Fetch providers for this content
   const { data: providers, isLoading: providersLoading } = useContentProviders(content.id);
+  
+  // Fetch watched episodes progress for series
+  const tmdbId = content.tmdbId || (content.id ? parseInt(content.id.split('-').pop() || '0', 10) : undefined);
+  const { data: watchedCount } = useContentProgress(
+    content.type === 'series' ? tmdbId : undefined,
+    content.type
+  );
 
   return (
     <Link
@@ -133,6 +141,14 @@ export function ContentCard({
           maxDisplay={4}
           size="sm"
         />
+
+        {/* Watched episodes progress for series */}
+        {content.type === 'series' && watchedCount != null && watchedCount > 0 && (
+          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-primary">
+            <Eye size={12} />
+            <span>{watchedCount} épisode{watchedCount > 1 ? 's' : ''} vu{watchedCount > 1 ? 's' : ''}</span>
+          </div>
+        )}
       </div>
     </Link>
   );
