@@ -1,10 +1,8 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Play, Plus, Check, Eye, Ban, ExternalLink, Clock, Calendar, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, Play, Plus, Check, Eye, Ban, Clock, Calendar, MapPin, Users } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/Navbar';
-import { StreamingBadge } from '@/components/StreamingBadge';
 import { RatingBadge } from '@/components/RatingBadge';
-import { WatchLinksButton } from '@/components/WatchLinksButton';
 import { LeavingSoonBadge } from '@/components/LeavingSoonBadge';
 import { NewSeasonBadge } from '@/components/NewSeasonBadge';
 import { SeasonsList } from '@/components/SeasonsList';
@@ -97,12 +95,7 @@ const ContentDetail = () => {
   const cast = content.credits?.cast?.slice(0, 10).map(c => c.name) || [];
   const director = content.credits?.crew?.find(c => c.job === 'Director')?.name;
   
-  // Watch providers (JustWatch data via TMDB)
-  const watchProviders = content['watch/providers']?.results?.FR;
-  const flatrateProviders = watchProviders?.flatrate || [];
-  const rentProviders = watchProviders?.rent || [];
-  const buyProviders = watchProviders?.buy || [];
-  const providerLink = watchProviders?.link;
+  // Watch providers removed per user request
 
   // Get trailer
   const trailer = content.videos?.results?.find(
@@ -216,16 +209,6 @@ const ContentDetail = () => {
 
               {/* Action buttons */}
               <div className="flex flex-wrap gap-3">
-                {/* Watch button with provider links */}
-                <WatchLinksButton 
-                  providers={watchProviders ? {
-                    flatrate: flatrateProviders,
-                    rent: rentProviders,
-                    buy: buyProviders,
-                    link: providerLink,
-                  } : null}
-                />
-
                 {trailer && (
                   <Button
                     size="lg"
@@ -302,109 +285,6 @@ const ContentDetail = () => {
                 </div>
               )}
 
-              {/* Where to watch - JustWatch data */}
-              <div className="rounded-xl bg-card border border-border p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-foreground">
-                    Où regarder
-                  </h2>
-                  {providerLink && (
-                    <Button variant="ghost" size="sm" asChild>
-                      <a href={providerLink} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink size={16} className="mr-1" />
-                        JustWatch
-                      </a>
-                    </Button>
-                  )}
-                </div>
-
-                {flatrateProviders.length === 0 && rentProviders.length === 0 && buyProviders.length === 0 ? (
-                  <p className="text-muted-foreground">Aucune plateforme de streaming disponible pour la France.</p>
-                ) : (
-                  <div className="space-y-4">
-                    {/* Subscription */}
-                    {flatrateProviders.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Inclus dans l'abonnement</p>
-                        <div className="flex flex-wrap gap-3">
-                          {flatrateProviders.map((provider: WatchProvider) => (
-                            <a
-                              key={provider.provider_id}
-                              href={providerLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
-                            >
-                              <StreamingBadge 
-                                platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
-                                logoPath={provider.logo_path}
-                                name={provider.provider_name}
-                                size="lg" 
-                              />
-                              <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Rent */}
-                    {rentProviders.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Location</p>
-                        <div className="flex flex-wrap gap-3">
-                          {rentProviders.map((provider: WatchProvider) => (
-                            <a
-                              key={provider.provider_id}
-                              href={providerLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
-                            >
-                              <StreamingBadge 
-                                platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
-                                logoPath={provider.logo_path}
-                                name={provider.provider_name}
-                                size="lg" 
-                              />
-                              <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Buy */}
-                    {buyProviders.length > 0 && (
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-2">Achat</p>
-                        <div className="flex flex-wrap gap-3">
-                          {buyProviders.map((provider: WatchProvider) => (
-                            <a
-                              key={provider.provider_id}
-                              href={providerLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-lg bg-secondary/30 p-3 hover:bg-secondary/50 transition-colors group"
-                            >
-                              <StreamingBadge 
-                                platform={provider.provider_name.toLowerCase().replace(/\s+/g, '')} 
-                                logoPath={provider.logo_path}
-                                name={provider.provider_name}
-                                size="lg" 
-                              />
-                              <span className="text-sm font-medium text-foreground">{provider.provider_name}</span>
-                              <ExternalLink size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
 
               {/* Seasons & Episodes for TV series */}
               {type === 'tv' && parsedId?.tmdbId && (
