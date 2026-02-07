@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Play, Plus, Check, Eye } from 'lucide-react';
+import { Plus, Check, Eye } from 'lucide-react';
 import { Content } from '@/types/content';
 import { RatingBadge } from './RatingBadge';
 import { ProvidersBadges } from './ProvidersBadges';
@@ -28,7 +28,7 @@ export function ContentCard({
   
   // Fetch watched episodes progress for series
   const tmdbId = content.tmdbId || (content.id ? parseInt(content.id.split('-').pop() || '0', 10) : undefined);
-  const { data: watchedCount } = useContentProgress(
+  const { data: progress } = useContentProgress(
     content.type === 'series' ? tmdbId : undefined,
     content.type
   );
@@ -82,17 +82,6 @@ export function ContentCard({
             <Button
               size="icon"
               variant="secondary"
-              className="h-10 w-10 rounded-full bg-primary text-primary-foreground shadow-glow hover:bg-primary/90"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <Play size={20} className="ml-0.5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
               className={cn(
                 "h-10 w-10 rounded-full",
                 isInList 
@@ -143,10 +132,21 @@ export function ContentCard({
         />
 
         {/* Watched episodes progress for series */}
-        {content.type === 'series' && watchedCount != null && watchedCount > 0 && (
-          <div className="flex items-center gap-1.5 mt-1.5 text-xs text-primary">
-            <Eye size={12} />
-            <span>{watchedCount} épisode{watchedCount > 1 ? 's' : ''} vu{watchedCount > 1 ? 's' : ''}</span>
+        {content.type === 'series' && progress && progress.watchedCount > 0 && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1 text-primary">
+                <Eye size={12} />
+                {progress.watchedCount}/{progress.totalEpisodes} épisodes
+              </span>
+              <span className="text-muted-foreground">{progress.percentage}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </div>
           </div>
         )}
       </div>
