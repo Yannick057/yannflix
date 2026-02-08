@@ -26,6 +26,7 @@ export interface FilterState {
   minRating: number;
   streamingServices: string[];
   countries: string[];
+  inProgress: boolean;
 }
 
 const defaultFilters: FilterState = {
@@ -35,6 +36,7 @@ const defaultFilters: FilterState = {
   minRating: 0,
   streamingServices: [],
   countries: [],
+  inProgress: false,
 };
 
 export function FilterSidebar({ onFiltersChange, onChange, filters: externalFilters, className }: FilterSidebarProps) {
@@ -84,7 +86,8 @@ export function FilterSidebar({ onFiltersChange, onChange, filters: externalFilt
     filters.countries.length > 0 ||
     filters.minRating > 0 ||
     filters.yearRange[0] !== 1990 ||
-    filters.yearRange[1] !== 2024;
+    filters.yearRange[1] !== 2024 ||
+    filters.inProgress;
 
   return (
     <aside className={cn("w-64 shrink-0 space-y-4", className)}>
@@ -105,6 +108,16 @@ export function FilterSidebar({ onFiltersChange, onChange, filters: externalFilt
           </Button>
         )}
       </div>
+
+      {/* In progress filter */}
+      <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-secondary/30 px-3 py-2.5 hover:bg-secondary/50 transition-colors">
+        <Checkbox
+          checked={filters.inProgress}
+          onCheckedChange={(checked) => updateFilters({ inProgress: !!checked })}
+          className="border-muted-foreground data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+        />
+        <span className="text-sm font-medium text-foreground">En cours de visionnage</span>
+      </label>
 
       {/* Type filter */}
       <FilterSection

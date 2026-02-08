@@ -5,6 +5,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { FilterSidebar, FilterState } from "@/components/FilterSidebar";
 import { ContentGrid } from "@/components/ContentGrid";
 import { RecommendationsSection } from "@/components/RecommendationsSection";
+import { useInProgressSeries } from "@/hooks/useInProgressSeries";
 
 import { Content } from "@/types/content";
 
@@ -26,6 +27,7 @@ import {
 import { PLATFORM_PROVIDER_IDS } from "@/hooks/useStreamingProviders";
 
 const Index = () => {
+  const { data: inProgressIds } = useInProgressSeries();
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterState>({
     type: "all",
@@ -34,6 +36,7 @@ const Index = () => {
     minRating: 0,
     streamingServices: [],
     countries: [],
+    inProgress: false,
   });
   const [watchlist, setWatchlist] = useState<number[]>([]);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -200,6 +203,13 @@ const Index = () => {
       );
     }
 
+    // Filter by in-progress (series the user has started watching)
+    if (filters.inProgress && inProgressIds && inProgressIds.size > 0) {
+      results = results.filter(
+        (item) => item.type === "series" && item.tmdbId && inProgressIds.has(item.tmdbId)
+      );
+    }
+
     // Remove duplicates by id
     const seen = new Set<string>();
     results = results.filter((item) => {
@@ -230,6 +240,7 @@ const Index = () => {
     isFetchingNextMovies,
     isFetchingNextTV,
     isFetchingNextTrending,
+    inProgressIds,
   ]);
 
   // Infinite scroll observer
