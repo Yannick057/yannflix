@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import LeavingSoon from "./pages/LeavingSoon";
 import Upcoming from "./pages/Upcoming";
 import TVProgram from "./pages/TVProgram";
+import Stats from "./pages/Stats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/leaving-soon" element={<LeavingSoon />} />
             <Route path="/upcoming" element={<Upcoming />} />
             <Route path="/tv-program" element={<TVProgram />} />
+            <Route path="/stats" element={<Stats />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

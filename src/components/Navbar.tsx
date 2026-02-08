@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Film, List, User, Menu, X, LogOut, Loader2, Clock, Calendar, Tv } from 'lucide-react';
+import { Film, List, User, Menu, X, LogOut, Loader2, Clock, Calendar, Tv, BarChart3 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,7 @@ export function Navbar() {
     { path: '/leaving-soon', label: 'Quitte bientôt', icon: Clock },
     { path: '/upcoming', label: 'À venir', icon: Calendar },
     { path: '/tv-program', label: 'Programme TV', icon: Tv },
+    { path: '/stats', label: 'Stats', icon: BarChart3 },
     { path: '/lists', label: 'Mes Listes', icon: List },
   ];
 
