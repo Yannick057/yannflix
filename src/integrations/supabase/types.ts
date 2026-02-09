@@ -256,6 +256,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_ratings: {
+        Row: {
+          content_type: string
+          created_at: string
+          id: string
+          rating: number
+          tmdb_id: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content_type: string
+          created_at?: string
+          id?: string
+          rating: number
+          tmdb_id: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content_type?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          tmdb_id?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       watched_episodes: {
         Row: {
           episode_number: number
