@@ -7,6 +7,7 @@ import { LeavingSoonBadge } from '@/components/LeavingSoonBadge';
 import { NewSeasonBadge } from '@/components/NewSeasonBadge';
 import { SeasonsList } from '@/components/SeasonsList';
 import { FollowSeriesButton } from '@/components/FollowSeriesButton';
+import { StarRating } from '@/components/StarRating';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -256,6 +257,18 @@ const ContentDetail = () => {
                   />
                 )}
               </div>
+
+              {/* Star rating */}
+              {parsedId?.tmdbId && (
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground mb-2">Votre note</h2>
+                  <StarRating
+                    tmdbId={parsedId.tmdbId}
+                    contentType={type === 'movie' ? 'movie' : 'tv'}
+                    size="lg"
+                  />
+                </div>
+              )}
 
               {/* Synopsis */}
               <div>
