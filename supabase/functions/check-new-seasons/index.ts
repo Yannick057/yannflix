@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.0";
+import * as webpush from "jsr:@negrel/webpush";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,13 +16,6 @@ interface FollowedSeries {
   tmdb_id: number;
   series_name: string;
   last_notified_season: number | null;
-}
-
-interface PushSubscription {
-  user_id: string;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -58,7 +52,7 @@ Deno.serve(async (req: Request) => {
 
     // 2. Get unique tmdb_ids to check
     const uniqueTmdbIds = [...new Set(followedSeries.map((s: FollowedSeries) => s.tmdb_id))];
-    const notifications: { userId: string; title: string; body: string }[] = [];
+    const notifications: { userId: string; title: string; body: string; tmdbId: number }[] = [];
 
     // 3. Check each series for new seasons
     for (const tmdbId of uniqueTmdbIds) {
@@ -72,7 +66,6 @@ Deno.serve(async (req: Request) => {
         const currentSeasons = tvData.number_of_seasons || 0;
         const seriesName = tvData.name || "Série inconnue";
 
-        // Find all users following this series
         const followers = followedSeries.filter(
           (s: FollowedSeries) => s.tmdb_id === tmdbId
         );
@@ -81,14 +74,13 @@ Deno.serve(async (req: Request) => {
           const lastNotified = follower.last_notified_season || 0;
 
           if (currentSeasons > lastNotified) {
-            // New season detected!
             notifications.push({
               userId: follower.user_id,
               title: `🎬 Nouvelle saison disponible !`,
               body: `${seriesName} - Saison ${currentSeasons} est maintenant disponible !`,
+              tmdbId,
             });
 
-            // Update last_notified_season
             await supabase
               .from("followed_series")
               .update({ last_notified_season: currentSeasons })
@@ -100,20 +92,58 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // 4. Send push notifications
+    // 4. Send real push notifications
     let sentCount = 0;
     if (notifications.length > 0 && vapidPublicKey && vapidPrivateKey) {
-      for (const notif of notifications) {
-        const { data: subscriptions } = await supabase
-          .from("push_subscriptions")
-          .select("*")
-          .eq("user_id", notif.userId);
+      // Import VAPID keys for web push
+      let appServer: webpush.ApplicationServer | null = null;
+      try {
+        const vapidKeys = {
+          publicKey: vapidPublicKey,
+          privateKey: vapidPrivateKey,
+        };
+        appServer = await webpush.ApplicationServer.new({
+          contactInformation: "mailto:admin@streamflix.app",
+          vapidKeys,
+        });
+      } catch (err) {
+        console.error("Error initializing web push:", err);
+      }
 
-        if (subscriptions && subscriptions.length > 0) {
-          console.log(
-            `Would send push to ${subscriptions.length} devices for user ${notif.userId}: ${notif.body}`
-          );
-          sentCount += subscriptions.length;
+      if (appServer) {
+        for (const notif of notifications) {
+          const { data: subscriptions } = await supabase
+            .from("push_subscriptions")
+            .select("*")
+            .eq("user_id", notif.userId);
+
+          if (subscriptions && subscriptions.length > 0) {
+            for (const sub of subscriptions) {
+              try {
+                const pushSubscription = {
+                  endpoint: sub.endpoint,
+                  keys: {
+                    p256dh: sub.p256dh,
+                    auth: sub.auth,
+                  },
+                };
+
+                const payload = JSON.stringify({
+                  title: notif.title,
+                  body: notif.body,
+                  icon: "/favicon.ico",
+                  data: { url: `/content/tv-${notif.tmdbId}` },
+                });
+
+                const subscriber = appServer.subscribe(pushSubscription);
+                await subscriber.pushTextMessage(payload, {});
+                sentCount++;
+                console.log(`Push sent to user ${notif.userId}: ${notif.body}`);
+              } catch (pushErr) {
+                console.error(`Error sending push to ${sub.endpoint}:`, pushErr);
+              }
+            }
+          }
         }
       }
     }
