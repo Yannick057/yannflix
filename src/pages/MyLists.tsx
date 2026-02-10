@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, MoreHorizontal, Trash2, Edit2, GripVertical, Film, Tv, Clock, Check, X, List, LogIn } from 'lucide-react';
+import { Plus, MoreHorizontal, Trash2, Edit2, GripVertical, Film, Tv, Clock, Check, X, List, LogIn, Share2, Copy, Link as LinkIcon } from 'lucide-react';
 import { Navbar } from '@/components/Navbar';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { Button } from '@/components/ui/button';
@@ -33,9 +33,11 @@ import {
   useDeleteList, 
   useRemoveFromList,
   useCreateDefaultLists,
+  useToggleListPublic,
   ListItemWithContent 
 } from '@/hooks/useUserLists';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
 
 const MyLists = () => {
   const { user } = useAuth();
@@ -45,7 +47,7 @@ const MyLists = () => {
   const deleteList = useDeleteList();
   const removeFromList = useRemoveFromList();
   const createDefaultLists = useCreateDefaultLists();
-  
+  const togglePublic = useToggleListPublic();
   const [activeListId, setActiveListId] = useState<string | null>(null);
   const [newListName, setNewListName] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -281,11 +283,53 @@ const MyLists = () => {
           {/* List content */}
           <div className="flex-1 min-w-0">
             {activeList && (
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-foreground">{activeList.name}</h2>
-                <p className="text-muted-foreground">
-                  {itemsLoading ? 'Chargement...' : `${listItems?.length || 0} élément${(listItems?.length || 0) !== 1 ? 's' : ''}`}
-                </p>
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-foreground">{activeList.name}</h2>
+                  <p className="text-muted-foreground">
+                    {itemsLoading ? 'Chargement...' : `${listItems?.length || 0} élément${(listItems?.length || 0) !== 1 ? 's' : ''}`}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeList.is_public && activeList.share_token ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const url = `${window.location.origin}/shared/${activeList.share_token}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Lien copié !');
+                      }}
+                    >
+                      <Copy size={16} className="mr-2" />
+                      Copier le lien
+                    </Button>
+                  ) : null}
+                  <Button
+                    variant={activeList.is_public ? 'secondary' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      togglePublic.mutate(
+                        { listId: activeList.id, isPublic: !activeList.is_public },
+                        {
+                          onSuccess: (data) => {
+                            if (data.is_public && data.share_token) {
+                              const url = `${window.location.origin}/shared/${data.share_token}`;
+                              navigator.clipboard.writeText(url);
+                              toast.success('Liste partagée ! Lien copié.');
+                            } else {
+                              toast.success('Liste rendue privée.');
+                            }
+                          },
+                        }
+                      );
+                    }}
+                    disabled={togglePublic.isPending}
+                  >
+                    <Share2 size={16} className="mr-2" />
+                    {activeList.is_public ? 'Partagée' : 'Partager'}
+                  </Button>
+                </div>
               </div>
             )}
 

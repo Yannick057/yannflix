@@ -232,7 +232,9 @@ export type Database = {
           description: string | null
           id: string
           is_default: boolean
+          is_public: boolean
           name: string
+          share_token: string | null
           updated_at: string
           user_id: string
         }
@@ -241,7 +243,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_default?: boolean
+          is_public?: boolean
           name: string
+          share_token?: string | null
           updated_at?: string
           user_id: string
         }
@@ -250,7 +254,9 @@ export type Database = {
           description?: string | null
           id?: string
           is_default?: boolean
+          is_public?: boolean
           name?: string
+          share_token?: string | null
           updated_at?: string
           user_id?: string
         }
