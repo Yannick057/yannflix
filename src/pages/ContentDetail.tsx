@@ -8,6 +8,7 @@ import { NewSeasonBadge } from '@/components/NewSeasonBadge';
 import { SeasonsList } from '@/components/SeasonsList';
 import { FollowSeriesButton } from '@/components/FollowSeriesButton';
 import { StarRating } from '@/components/StarRating';
+import { ShareButton } from '@/components/ShareButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -256,6 +257,9 @@ const ContentDetail = () => {
                     seriesName={title} 
                   />
                 )}
+                
+                {/* Share */}
+                <ShareButton title={title} />
               </div>
 
               {/* Star rating */}
