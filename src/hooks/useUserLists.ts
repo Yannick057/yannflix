@@ -8,6 +8,8 @@ export interface UserList {
   name: string;
   description: string | null;
   is_default: boolean;
+  is_public: boolean;
+  share_token: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -277,6 +279,34 @@ export function useCreateDefaultLists() {
 
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userLists'] });
+    },
+  });
+}
+
+export function useToggleListPublic() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ listId, isPublic }: { listId: string; isPublic: boolean }) => {
+      const updates: Record<string, unknown> = { is_public: isPublic };
+
+      if (isPublic) {
+        // Generate a short random token
+        updates.share_token = crypto.randomUUID().slice(0, 12);
+      }
+
+      const { data, error } = await supabase
+        .from('user_lists')
+        .update(updates)
+        .eq('id', listId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data as UserList;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userLists'] });

@@ -13,6 +13,7 @@ import Upcoming from "./pages/Upcoming";
 import TVProgram from "./pages/TVProgram";
 import Stats from "./pages/Stats";
 import TopRated from "./pages/TopRated";
+import SharedList from "./pages/SharedList";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/tv-program" element={<TVProgram />} />
             <Route path="/stats" element={<Stats />} />
             <Route path="/top-rated" element={<TopRated />} />
+            <Route path="/shared/:token" element={<SharedList />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
