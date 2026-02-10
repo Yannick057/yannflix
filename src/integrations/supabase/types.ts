@@ -318,7 +318,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_top_rated_content: {
+        Args: { limit_count?: number; min_ratings?: number }
+        Returns: {
+          avg_rating: number
+          content_type: string
+          tmdb_id: number
+          total_ratings: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
