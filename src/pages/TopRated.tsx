@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { useTopRated } from '@/hooks/useTopRated';
 import { useContentDetail } from '@/hooks/useContent';
 import { getImageUrl } from '@/lib/tmdb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Star, Trophy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Star, Trophy, Film, Tv, Filter } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
@@ -55,6 +57,15 @@ function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
           </Badge>
           <span className="text-xs text-muted-foreground">{year}</span>
         </div>
+        {content.genres && content.genres.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {content.genres.slice(0, 3).map((g: { id: number; name: string }) => (
+              <span key={g.id} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                {g.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
       <div className="text-right shrink-0">
         <div className="flex items-center gap-1 text-primary">
@@ -72,14 +83,48 @@ function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
 
 const TopRated = () => {
   const { data: topRated, isLoading } = useTopRated(1, 30);
+  const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
+
+  const filteredItems = topRated?.filter(item => {
+    if (typeFilter !== 'all' && item.content_type !== typeFilter) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <Trophy size={28} className="text-primary" />
           <h1 className="text-3xl font-bold text-foreground">Classement des mieux notés</h1>
+        </div>
+
+        {/* Type filter */}
+        <div className="mb-6 flex items-center gap-2 flex-wrap">
+          <Filter size={16} className="text-muted-foreground" />
+          <Button
+            variant={typeFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTypeFilter('all')}
+          >
+            Tous
+          </Button>
+          <Button
+            variant={typeFilter === 'movie' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTypeFilter('movie')}
+          >
+            <Film size={14} className="mr-1" />
+            Films
+          </Button>
+          <Button
+            variant={typeFilter === 'tv' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTypeFilter('tv')}
+          >
+            <Tv size={14} className="mr-1" />
+            Séries
+          </Button>
         </div>
 
         {isLoading ? (
@@ -95,15 +140,19 @@ const TopRated = () => {
               </div>
             ))}
           </div>
-        ) : !topRated || topRated.length === 0 ? (
+        ) : !filteredItems || filteredItems.length === 0 ? (
           <div className="text-center py-16">
             <Star size={48} className="mx-auto text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Aucune note encore</h2>
-            <p className="text-muted-foreground">Soyez le premier à noter des films et séries !</p>
+            <h2 className="text-xl font-semibold text-foreground mb-2">Aucun résultat</h2>
+            <p className="text-muted-foreground">
+              {topRated && topRated.length > 0
+                ? 'Aucun contenu ne correspond à ce filtre.'
+                : 'Soyez le premier à noter des films et séries !'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3 max-w-2xl">
-            {topRated.map((item, index) => (
+            {filteredItems.map((item, index) => (
               <TopRatedCard
                 key={`${item.content_type}-${item.tmdb_id}`}
                 tmdbId={item.tmdb_id}
