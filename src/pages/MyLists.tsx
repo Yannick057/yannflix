@@ -241,6 +241,12 @@ const MyLists = () => {
                         )}>
                           {list.name}
                         </span>
+                        {list.is_public && (
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                            <Share2 size={10} className="mr-0.5" />
+                            Public
+                          </Badge>
+                        )}
                         {!list.is_default && (
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
