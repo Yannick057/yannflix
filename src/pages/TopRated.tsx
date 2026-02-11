@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { useTopRated } from '@/hooks/useTopRated';
 import { useContentDetail } from '@/hooks/useContent';
@@ -6,15 +6,24 @@ import { getImageUrl } from '@/lib/tmdb';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Star, Trophy, Film, Tv, Filter } from 'lucide-react';
+import { Star, Trophy, Film, Tv, Filter, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
-function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
+const GENRE_OPTIONS = [
+  'Action', 'Aventure', 'Animation', 'Comédie', 'Crime', 'Documentaire',
+  'Drame', 'Familial', 'Fantastique', 'Histoire', 'Horreur', 'Musique',
+  'Mystère', 'Romance', 'Science-Fiction', 'Thriller', 'Guerre', 'Western',
+];
+
+function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank, genreFilter, onGenresResolved }: {
   tmdbId: number;
   contentType: string;
   avgRating: number;
   totalRatings: number;
   rank: number;
+  genreFilter: string[];
+  onGenresResolved?: (genres: string[]) => void;
 }) {
   const { data: content, isLoading } = useContentDetail(tmdbId, contentType as 'movie' | 'tv');
 
@@ -32,6 +41,13 @@ function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
   }
 
   if (!content) return null;
+
+  const contentGenres: string[] = content.genres?.map((g: { id: number; name: string }) => g.name) || [];
+
+  // Filter by genre
+  if (genreFilter.length > 0 && !genreFilter.some(g => contentGenres.includes(g))) {
+    return null;
+  }
 
   const title = content.title || content.name || 'Sans titre';
   const year = (content.release_date || content.first_air_date || '').split('-')[0];
@@ -57,11 +73,11 @@ function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
           </Badge>
           <span className="text-xs text-muted-foreground">{year}</span>
         </div>
-        {content.genres && content.genres.length > 0 && (
+        {contentGenres.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
-            {content.genres.slice(0, 3).map((g: { id: number; name: string }) => (
-              <span key={g.id} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                {g.name}
+            {contentGenres.slice(0, 3).map((name) => (
+              <span key={name} className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                {name}
               </span>
             ))}
           </div>
@@ -84,8 +100,15 @@ function TopRatedCard({ tmdbId, contentType, avgRating, totalRatings, rank }: {
 const TopRated = () => {
   const { data: topRated, isLoading } = useTopRated(1, 30);
   const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'tv'>('all');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
 
-  const filteredItems = topRated?.filter(item => {
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev =>
+      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+    );
+  };
+
+  const filteredByType = topRated?.filter(item => {
     if (typeFilter !== 'all' && item.content_type !== typeFilter) return false;
     return true;
   });
@@ -99,32 +122,42 @@ const TopRated = () => {
           <h1 className="text-3xl font-bold text-foreground">Classement des mieux notés</h1>
         </div>
 
-        {/* Type filter */}
-        <div className="mb-6 flex items-center gap-2 flex-wrap">
-          <Filter size={16} className="text-muted-foreground" />
-          <Button
-            variant={typeFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('all')}
-          >
-            Tous
-          </Button>
-          <Button
-            variant={typeFilter === 'movie' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('movie')}
-          >
-            <Film size={14} className="mr-1" />
-            Films
-          </Button>
-          <Button
-            variant={typeFilter === 'tv' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setTypeFilter('tv')}
-          >
-            <Tv size={14} className="mr-1" />
-            Séries
-          </Button>
+        {/* Filters */}
+        <div className="mb-6 space-y-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Filter size={16} className="text-muted-foreground" />
+            <Button variant={typeFilter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setTypeFilter('all')}>
+              Tous
+            </Button>
+            <Button variant={typeFilter === 'movie' ? 'default' : 'outline'} size="sm" onClick={() => setTypeFilter('movie')}>
+              <Film size={14} className="mr-1" /> Films
+            </Button>
+            <Button variant={typeFilter === 'tv' ? 'default' : 'outline'} size="sm" onClick={() => setTypeFilter('tv')}>
+              <Tv size={14} className="mr-1" /> Séries
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {selectedGenres.length > 0 && (
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => setSelectedGenres([])}>
+                <X size={12} className="mr-1" /> Réinitialiser
+              </Button>
+            )}
+            {GENRE_OPTIONS.map(genre => (
+              <button
+                key={genre}
+                onClick={() => toggleGenre(genre)}
+                className={cn(
+                  "px-2.5 py-1 rounded-full text-xs font-medium transition-colors border",
+                  selectedGenres.includes(genre)
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary/50 text-muted-foreground border-border hover:border-primary/50"
+                )}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isLoading ? (
@@ -140,19 +173,19 @@ const TopRated = () => {
               </div>
             ))}
           </div>
-        ) : !filteredItems || filteredItems.length === 0 ? (
+        ) : !filteredByType || filteredByType.length === 0 ? (
           <div className="text-center py-16">
             <Star size={48} className="mx-auto text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold text-foreground mb-2">Aucun résultat</h2>
             <p className="text-muted-foreground">
               {topRated && topRated.length > 0
-                ? 'Aucun contenu ne correspond à ce filtre.'
+                ? 'Aucun contenu ne correspond à ces filtres.'
                 : 'Soyez le premier à noter des films et séries !'}
             </p>
           </div>
         ) : (
           <div className="space-y-3 max-w-2xl">
-            {filteredItems.map((item, index) => (
+            {filteredByType.map((item, index) => (
               <TopRatedCard
                 key={`${item.content_type}-${item.tmdb_id}`}
                 tmdbId={item.tmdb_id}
@@ -160,6 +193,7 @@ const TopRated = () => {
                 avgRating={item.avg_rating}
                 totalRatings={item.total_ratings}
                 rank={index + 1}
+                genreFilter={selectedGenres}
               />
             ))}
           </div>
