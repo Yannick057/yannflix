@@ -83,7 +83,7 @@ export function ContentCard({
               size="icon"
               variant="secondary"
               className={cn(
-                "h-8 w-8 rounded-full shadow-lg",
+                "h-8 w-8 rounded-full shadow-lg transition-transform duration-200 hover:scale-125",
                 isInList 
                   ? "bg-primary text-primary-foreground" 
                   : "bg-card/90 text-foreground hover:bg-primary hover:text-primary-foreground backdrop-blur-sm"
