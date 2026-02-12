@@ -88,7 +88,7 @@ export function ContentCard({
                   className={cn(
                     "h-9 w-9 rounded-full shadow-lg transition-transform duration-200 hover:scale-125",
                     isInList 
-                      ? "bg-primary text-primary-foreground" 
+                      ? "bg-primary text-primary-foreground animate-pulse-glow" 
                       : "bg-card text-foreground hover:bg-primary hover:text-primary-foreground border border-border"
                   )}
                   onClick={(e) => {
