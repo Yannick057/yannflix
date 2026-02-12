@@ -79,7 +79,7 @@ export function ContentCard({
 
         {/* Hover actions */}
         {showActions && (
-          <div className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="absolute bottom-2 right-2 translate-y-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
