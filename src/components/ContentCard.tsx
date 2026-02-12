@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Plus, Check, Eye } from 'lucide-react';
 import { Content } from '@/types/content';
 import { RatingBadge } from './RatingBadge';
@@ -79,23 +80,30 @@ export function ContentCard({
         {/* Hover actions */}
         {showActions && (
           <div className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <Button
-              size="icon"
-              variant="secondary"
-              className={cn(
-                "h-8 w-8 rounded-full shadow-lg transition-transform duration-200 hover:scale-125",
-                isInList 
-                  ? "bg-primary text-primary-foreground" 
-                  : "bg-card/90 text-foreground hover:bg-primary hover:text-primary-foreground backdrop-blur-sm"
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onAddToList?.(content);
-              }}
-            >
-              {isInList ? <Check size={14} /> : <Plus size={14} />}
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className={cn(
+                    "h-9 w-9 rounded-full shadow-lg transition-transform duration-200 hover:scale-125",
+                    isInList 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-card text-foreground hover:bg-primary hover:text-primary-foreground border border-border"
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAddToList?.(content);
+                  }}
+                >
+                  {isInList ? <Check size={16} /> : <Plus size={16} />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="text-xs">
+                {isInList ? 'Retirer de ma liste' : 'Ajouter à ma liste'}
+              </TooltipContent>
+            </Tooltip>
           </div>
         )}
       </div>
