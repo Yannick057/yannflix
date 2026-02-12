@@ -78,15 +78,15 @@ export function ContentCard({
 
         {/* Hover actions */}
         {showActions && (
-          <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+          <div className="absolute bottom-2 right-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <Button
               size="icon"
               variant="secondary"
               className={cn(
-                "h-10 w-10 rounded-full",
+                "h-8 w-8 rounded-full shadow-lg",
                 isInList 
                   ? "bg-primary text-primary-foreground" 
-                  : "bg-secondary/90 text-foreground hover:bg-primary hover:text-primary-foreground"
+                  : "bg-card/90 text-foreground hover:bg-primary hover:text-primary-foreground backdrop-blur-sm"
               )}
               onClick={(e) => {
                 e.preventDefault();
@@ -94,7 +94,7 @@ export function ContentCard({
                 onAddToList?.(content);
               }}
             >
-              {isInList ? <Check size={18} /> : <Plus size={18} />}
+              {isInList ? <Check size={14} /> : <Plus size={14} />}
             </Button>
           </div>
         )}
